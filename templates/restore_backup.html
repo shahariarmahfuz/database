@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}ডাটাবেজ পুনরুদ্ধার{% endblock %}
+
+{% block content %}
+    <h2>SQL ফাইল থেকে PostgreSQL ডাটাবেজ পুনরুদ্ধার</h2>
+    <p>আপনার PostgreSQL ডাটাবেজের কানেকশন স্ট্রিং এবং যে .sql ফাইলটি পুনরুদ্ধার করতে চান, সেটি আপলোড করুন।</p>
+
+    <form method="POST" action="{{ url_for('main.restore_backup') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="db_string_restore">ডাটাবেজ কানেকশন স্ট্রিং (যেখানে পুনরুদ্ধার করবেন):</label>
+            <input type="text" id="db_string_restore" name="db_string_restore" required placeholder="postgresql://user:pass@host:port/dbname">
+        </div>
+        <div class="form-group">
+            <label for="sql_file_restore">SQL ব্যাকআপ ফাইল (.sql):</label>
+            <input type="file" id="sql_file_restore" name="sql_file_restore" accept=".sql" required>
+        </div>
+        <div class="form-actions">
+            <input type="submit" value="পুনরুদ্ধার করুন" class="primary">
+        </div>
+    </form>
+
+    {% if psql_output or psql_error %}
+        <hr>
+        <h3>পুনরুদ্ধারের ফলাফল:</h3>
+        {% if success %}
+             <p style="color: green;">প্রক্রিয়া সফলভাবে সম্পন্ন হয়েছে (সম্ভবত)। নিচের আউটপুট দেখুন।</p>
+        {% else %}
+             <p style="color: red;">প্রক্রিয়ায় সমস্যা হয়েছে। নিচের এরর দেখুন।</p>
+        {% endif %}
+
+        {% if psql_output %}
+            <h4>psql Output:</h4>
+            <pre>{{ psql_output }}</pre>
+        {% endif %}
+        {% if psql_error %}
+            <h4 style="color: red;">psql Error:</h4>
+            <pre>{{ psql_error }}</pre>
+        {% endif %}
+    {% endif %}
+{% endblock %}
