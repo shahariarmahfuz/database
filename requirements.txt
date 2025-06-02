@@ -1,0 +1,7 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
+psycopg2-binary  # PostgreSQL এর জন্য
+python-dotenv
+gunicorn         # প্রোডাকশন WSGI সার্ভার
