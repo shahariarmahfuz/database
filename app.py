@@ -15,7 +15,7 @@ app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'a_very_strong_def
 # ব্যবহারকারীর দেওয়া PostgreSQL কানেকশন স্ট্রিং সরাসরি ব্যবহার করা হচ্ছে
 # সতর্কতা: প্রোডাকশনে সরাসরি কোডে ক্রেডেনশিয়ালস রাখা উচিত নয়।
 # আপনার দেওয়া কানেকশন স্ট্রিং:
-POSTGRESQL_CONNECTION_STRING = "postgresql://unknown_h8v3_user:kpU1Kgvo5PomlfVa8sA5Z3obRiOpDW8K@dpg-d0uk3r63jp1c7387sr5g-a/unknown_h8v3"
+POSTGRESQL_CONNECTION_STRING = "postgresql://unknown_t0fx_user:ZAG3RGEpGXuVXTP5MjyuZJU6a4VeXykU@dpg-d0upmpjipnbc73eptrbg-a/unknown_t0fx"
 
 # যদি Render.com এ তাদের নিজস্ব PostgreSQL ডাটাবেজ ব্যবহার করেন, 
 # তাহলে os.environ.get('DATABASE_URL') ব্যবহার করাই ভালো হতো।
