@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}আমার প্রজেক্টসমূহ{% endblock %}
+
+{% block content %}
+    <h2>আমার প্রজেক্টসমূহ (আপডেটেবল ব্যাকআপ)</h2>
+    <p><a href="{{ url_for('main.create_project') }}" class="button success" style="padding: 8px 12px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; display:inline-block; margin-bottom:15px;">+ নতুন প্রজেক্ট তৈরি করুন</a></p>
+
+    {% if projects %}
+        <table>
+            <thead>
+                <tr>
+                    <th>প্রজেক্টের নাম</th>
+                    <th>শেষ ব্যাকআপ</th>
+                    <th>পরবর্তী ব্যাকআপ (আনুমানিক)</th>
+                    <th>ব্যাকআপ ফাইল</th>
+                    <th>শিডিউল</th>
+                    <th>অ্যাকশন</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                    <tr>
+                        <td>{{ project.project_name }}</td>
+                        <td>{{ project.last_backup_timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') if project.last_backup_timestamp else 'কখনো না' }}</td>
+                        <td>
+                            {% if project.is_schedule_active and project.next_scheduled_backup %}
+                                {{ project.next_scheduled_backup.strftime('%Y-%m-%d %H:%M:%S UTC') }} ({{ project.backup_interval_minutes }} মিনিট পর পর)
+                            {% elif project.is_schedule_active and project.db_connection_string %}
+                                শীঘ্রই (cron job দ্বারা নির্ধারিত)
+                            {% elif project.is_schedule_active and not project.db_connection_string %}
+                                <span style="color:orange;">ডাটাবেজ লিংক প্রয়োজন</span>
+                            {% else %}
+                                নিষ্ক্রিয়
+                            {% endif %}
+                        </td>
+                        <td>{{ project.backup_file_name if project.backup_file_name else '-' }}</td>
+                        <td>{% if project.is_schedule_active %}সক্রিয় ✅{% else %}নিষ্ক্রিয় ❌{% endif %}</td>
+                        <td class="action-links">
+                            <a href="{{ url_for('main.project_settings', project_id=project.id) }}">সেটিংস/দেখুন</a>
+                            {% if project.backup_file_name %}
+                                <a href="{{ url_for('main.download_latest_project_backup', project_id=project.id) }}">ডাউনলোড</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>আপনার কোনো প্রজেক্ট এখনো তৈরি করা হয়নি। একটি নতুন প্রজেক্ট তৈরি করে স্বয়ংক্রিয় ব্যাকআপ সেটআপ করুন।</p>
+    {% endif %}
+{% endblock %}
