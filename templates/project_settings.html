@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ project.project_name }} - সেটিংস{% endblock %}
+
+{% block content %}
+    <h2>প্রজেক্ট: {{ project.project_name }} - সেটিংস ও তথ্য</h2>
+    
+    <form method="POST" action="{{ url_for('main.project_settings', project_id=project.id) }}">
+        <div class="form-group">
+            <label for="project_name">প্রজেক্টের নাম:</label>
+            <input type="text" id="project_name" name="project_name" value="{{ project.project_name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="db_connection_string">ডাটাবেজ কানেকশন স্ট্রিং (PostgreSQL):</label>
+            <input type="text" id="db_connection_string" name="db_connection_string" value="{{ project.db_connection_string if project.db_connection_string else '' }}" placeholder="postgresql://user:pass@host:port/dbname">
+            {% if not project.db_connection_string and project.is_schedule_active %}
+                <small style="color:orange;">স্বয়ংক্রিয় ব্যাকআপের জন্য ডাটাবেজ লিংক আবশ্যক।</small>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label for="backup_interval_minutes">ব্যাকআপ অন্তর (মিনিটে, সর্বনিম্ন ৫):</label>
+            <input type="number" id="backup_interval_minutes" name="backup_interval_minutes" value="{{ project.backup_interval_minutes }}" min="5" required>
+        </div>
+        <div class="form-group">
+            <input type="checkbox" id="is_schedule_active" name="is_schedule_active" {% if project.is_schedule_active %}checked{% endif %}>
+            <label for="is_schedule_active">স্বয়ংক্রিয় ব্যাকআপ শিডিউল সক্রিয় করুন</label>
+        </div>
+        <div class="form-actions">
+            <input type="submit" value="সেটিংস সেভ করুন" class="primary">
+        </div>
+    </form>
+
+    <hr>
+
+    <h3>বর্তমান ব্যাকআপ তথ্য</h3>
+    {% if project.last_backup_timestamp and project.backup_file_name %}
+        <p><strong>শেষ ব্যাকআপ নেওয়া হয়েছে:</strong> {{ project.last_backup_timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
+        <p><strong>ব্যাকআপ ফাইলের নাম:</strong> {{ project.backup_file_name }}</p>
+        <p><a href="{{ url_for('main.download_latest_project_backup', project_id=project.id) }}" class="button info" style="padding: 8px 12px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; display:inline-block;">সর্বশেষ ব্যাকআপ ডাউনলোড করুন</a></p>
+    {% else %}
+        <p>এই প্রজেক্টের জন্য এখনো কোনো ব্যাকআপ নেওয়া হয়নি। ডাটাবেজ লিংক সেট করে শিডিউল সক্রিয় করলে প্রথম ব্যাকআপ নেওয়া হবে।</p>
+    {% endif %}
+    
+    {% if project.is_schedule_active and project.db_connection_string %}
+        {% if project.next_scheduled_backup %}
+            <p><strong>পরবর্তী পরিকল্পিত ব্যাকআপ (আনুমানিক):</strong> {{ project.next_scheduled_backup.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
+        {% else %}
+            <p>পরবর্তী ব্যাকআপ শীঘ্রই নির্ধারিত হবে (cron job কল করার পর)।</p>
+        {% endif %}
+    {% elif project.is_schedule_active and not project.db_connection_string %}
+        <p style="color:red;">স্বয়ংক্রিয় ব্যাকআপের জন্য অনুগ্রহ করে ডাটাবেজ কানেকশন স্ট্রিং সেট করুন।</p>
+    {% elif not project.is_schedule_active %}
+        <p>স্বয়ংক্রিয় ব্যাকআপ শিডিউল বর্তমানে নিষ্ক্রিয় আছে।</p>
+    {% endif %}
+
+    <p style="margin-top: 30px;"><a href="{{ url_for('main.list_projects') }}">সকল প্রজেক্টের তালিকায় ফিরে যান</a></p>
+{% endblock %}
