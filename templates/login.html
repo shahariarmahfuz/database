@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}লগইন{% endblock %}
+
+{% block content %}
+    <h2>লগইন করুন</h2>
+    <form method="POST" action="{{ url_for('auth.login') }}">
+        <div class="form-group">
+            <label for="username">ইউজারনেম:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">পাসওয়ার্ড:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <input type="checkbox" id="remember" name="remember">
+            <label for="remember">আমাকে মনে রাখুন</label>
+        </div>
+        <div class="form-actions">
+            <input type="submit" value="লগইন" class="primary">
+        </div>
+    </form>
+    <p style="margin-top: 15px;">অ্যাকাউন্ট নেই? <a href="{{ url_for('auth.signup') }}">এখানে সাইনআপ করুন</a></p>
+{% endblock %}
