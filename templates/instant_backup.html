@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title %}ইনস্ট্যান্ট ব্যাকআপ{% endblock %}
+
+{% block content %}
+    <h2>ইনস্ট্যান্ট PostgreSQL ডাটাবেজ ব্যাকআপ</h2>
+    <p>নিচের ফিল্ডে আপনার PostgreSQL ডাটাবেজের সম্পূর্ণ কানেকশন স্ট্রিং দিন এবং "ব্যাকআপ তৈরি করুন" বাটনে ক্লিক করুন। একটি SQL ফাইল ডাউনলোড শুরু হবে।</p>
+    
+    <form method="POST" action="{{ url_for('main.instant_backup') }}">
+        <div class="form-group">
+            <label for="db_string_backup">ডাটাবেজ কানেকশন স্ট্রিং:</label>
+            <input type="text" id="db_string_backup" name="db_string_backup" required placeholder="postgresql://user:pass@host:port/dbname">
+        </div>
+        <div class="form-actions">
+            <input type="submit" value="ব্যাকআপ তৈরি করুন" class="success">
+        </div>
+    </form>
+{% endblock %}
