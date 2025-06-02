@@ -6,45 +6,32 @@ from auth import auth_bp
 from routes import main_bp
 
 # --- Flask App ইনিশিয়ালাইজেশন ---
-app = Flask(__name__) 
-# instance_relative_config=True দিলে Flask instance ফোল্ডার থেকে কনফিগ ফাইল লোড করতে পারে, 
-# তবে আমরা সরাসরি পাথ ম্যানেজ করছি।
+app = Flask(__name__)
 
 # --- কনফিগারেশন ---
-app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'fallback_a_very_very_strong_secret_key_for_dev_123_change_this')
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'a_very_strong_default_secret_key_for_dev_123_change_this_properly_in_env')
 
-# --- SQLite ডাটাবেজ কনফিগারেশন ---
-# Render.com এ Persistent Disk এর পাথ এখানে সঠিকভাবে দিতে হবে।
-# DATABASE_STORAGE_DIR এনভায়রনমেন্ট ভেরিয়েবল Render এ সেট করতে হবে, 
-# যার মান হবে Persistent Disk এ তৈরি করা একটি ফোল্ডারের পাথ (যেমন /mnt/disk/app_data)
-# লোকাল ডেভেলপমেন্টের জন্য এটি বর্তমান ডিরেক্টরির পাশে 'instance' ফোল্ডার ব্যবহার করবে।
-DATABASE_DIR = os.environ.get('DATABASE_STORAGE_DIR', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance'))
+# --- PostgreSQL ডাটাবেজ কনফিগারেশন ---
+# ব্যবহারকারীর দেওয়া PostgreSQL কানেকশন স্ট্রিং সরাসরি ব্যবহার করা হচ্ছে
+# সতর্কতা: প্রোডাকশনে সরাসরি কোডে ক্রেডেনশিয়ালস রাখা উচিত নয়।
+# আপনার দেওয়া কানেকশন স্ট্রিং:
+POSTGRESQL_CONNECTION_STRING = "postgresql://unknown_h8v3_user:kpU1Kgvo5PomlfVa8sA5Z3obRiOpDW8K@dpg-d0uk3r63jp1c7387sr5g-a/unknown_h8v3"
 
-# নিশ্চিত করুন যে DATABASE_DIR (instance ফোল্ডার) বিদ্যমান আছে
-# Flask অ্যাপ চালু হওয়ার সময় এটি চেক করা ভালো।
-if not os.path.exists(DATABASE_DIR):
-    try:
-        os.makedirs(DATABASE_DIR, exist_ok=True)
-        print(f"Created database storage directory at: {DATABASE_DIR}")
-    except OSError as e:
-        print(f"CRITICAL: Error creating database storage directory at {DATABASE_DIR}: {e}")
-        # এখানে অ্যাপ ক্র্যাশ করানো বা একটি ফলব্যাক পাথ ব্যবহার করার সিদ্ধান্ত নিতে পারেন।
-        # আপাতত, অ্যাপ চলতে থাকবে, কিন্তু ডাটাবেজ তৈরি নাও হতে পারে।
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATABASE_DIR, 'user.db')}"
+# যদি Render.com এ তাদের নিজস্ব PostgreSQL ডাটাবেজ ব্যবহার করেন, 
+# তাহলে os.environ.get('DATABASE_URL') ব্যবহার করাই ভালো হতো।
+# কিন্তু আপনার অনুরোধ অনুযায়ী সরাসরি স্ট্রিং ব্যবহার করা হলো।
+app.config['SQLALCHEMY_DATABASE_URI'] = POSTGRESQL_CONNECTION_STRING
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # ৩২ মেগাবাইট ফাইল আপলোড লিমিট
 
-# আপলোড ফোল্ডার (অস্থায়ী ফাইল, যেমন রিস্টোরের জন্য SQL ফাইল, রাখার জন্য)
-# এটি Render এর ephemeral filesystem এ থাকতে পারে।
+# আপলোড ফোল্ডার (অস্থায়ী ফাইল রাখার জন্য)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads_temp')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# ইউজার-স্পেসিফিক ফাইল (শিডিউলড pg_dump ব্যাকআপ) রাখার মূল ফোল্ডার
+# ইউজার-স্পেসিফিক ফাইল (শিডিউলড ব্যাকআপ) রাখার মূল ফোল্ডার
 # Render.com এ এটি একটি মাউন্ট করা Persistent Disk এর পাথ হওয়া উচিত।
-# (DATABASE_STORAGE_DIR এর মতোই, USER_FILES_DIR নামে আরেকটি এনভায়রনমেন্ট ভেরিয়েবল ব্যবহার করা ভালো)
 USER_FILES_BASE_DIR = os.environ.get('USER_FILES_STORAGE_DIR', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_files_local_dev'))
 if not os.path.exists(USER_FILES_BASE_DIR):
     os.makedirs(USER_FILES_BASE_DIR, exist_ok=True)
@@ -68,32 +55,20 @@ def load_user(user_id):
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(main_bp, url_prefix='/')
 
-# --- CLI কমান্ড (ঐচ্ছিক, Render এ Deploy Script ব্যবহার করা যেতে পারে) ---
+# --- CLI কমান্ড (ডাটাবেজ টেবিল তৈরি করার জন্য) ---
 @app.cli.command("init-db")
 def init_db_command():
     """ডাটাবেজ টেবিল তৈরি করে (যদি না থাকে)।"""
     with app.app_context():
-        # DATABASE_DIR তৈরি হয়েছে কিনা আবার নিশ্চিত করা (যদি অ্যাপ চালু হওয়ার সময় না হয়ে থাকে)
-        if not os.path.exists(DATABASE_DIR):
-             try:
-                os.makedirs(DATABASE_DIR, exist_ok=True)
-                print(f"init-db: Created database storage directory at: {DATABASE_DIR}")
-             except OSError:
-                print(f"init-db: Could not create database storage directory at {DATABASE_DIR}. Check permissions.")
-                return
         main_db.create_all()
-    print(f"Initialized the SQLite database at {app.config['SQLALCHEMY_DATABASE_URI']}")
+    print(f"Initialized the database and created tables (if they didn't exist) on {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 # --- অ্যাপ চালানো ---
 if __name__ == '__main__':
     with app.app_context(): 
-        # DATABASE_DIR তৈরি হয়েছে কিনা আবার নিশ্চিত করা
-        if not os.path.exists(DATABASE_DIR):
-             try:
-                os.makedirs(DATABASE_DIR, exist_ok=True)
-             except OSError:
-                print(f"Could not create database storage directory at {DATABASE_DIR} on startup.")
-        main_db.create_all() # ডাটাবেজ ফাইল এবং টেবিল তৈরি করবে যদি না থাকে
+        # অ্যাপ চালু হওয়ার সময় টেবিল তৈরি করা (যদি init-db ব্যবহার না করেন)
+        # db.create_all() কল করলে টেবিল না থাকলে তৈরি হবে, থাকলে কিছু করবে না।
+        main_db.create_all() 
     
     # debug=False প্রোডাকশনের জন্য, debug=True ডেভেলপমেন্টের জন্য
     # Render এ PORT এনভায়রনমেন্ট ভেরিয়েবল থেকে পোর্ট নেওয়া হয়।
