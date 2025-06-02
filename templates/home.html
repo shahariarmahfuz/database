@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}হোমপেজ{% endblock %}
+
+{% block content %}
+    <h1>PG Backup সার্ভিস এ স্বাগতম, {{ current_user.username }}!</h1>
+    <p>এখান থেকে আপনি আপনার PostgreSQL ডাটাবেজের ব্যাকআপ নিতে, পুনরুদ্ধার করতে এবং স্বয়ংক্রিয় ব্যাকআপ সেটআপ করতে পারবেন।</p>
+    
+    <h2>ফিচারসমূহ:</h2>
+    <ul>
+        <li><a href="{{ url_for('main.instant_backup') }}">ইনস্ট্যান্ট ব্যাকআপ ডাউনলোড</a>: দ্রুত কোনো ডাটাবেজের ব্যাকআপ নিন।</li>
+        <li><a href="{{ url_for('main.list_projects') }}">আপডেটেবল ব্যাকআপ (প্রজেক্ট)</a>: প্রজেক্ট তৈরি করুন এবং স্বয়ংক্রিয়ভাবে নিয়মিত ব্যাকআপ নিন ও ডাউনলোড করুন।</li>
+        <li><a href="{{ url_for('main.restore_backup') }}">পুনরুদ্ধার/সিঙ্ক</a>: আপলোড করা SQL ফাইল থেকে ডাটাবেজ পুনরুদ্ধার করুন।</li>
+    </ul>
+{% endblock %}
